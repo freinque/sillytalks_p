@@ -4,7 +4,7 @@ import numpy as np
 import sys
 
 from keras.models import Sequential, Model
-from keras.layers import Dense, Activation, Flatten, Input, concatenate, BatchNormalization, Lambda
+from keras.layers import Dense, Activation, Flatten, Input, concatenate, BatchNormalization
 from keras.optimizers import Adam
 from keras.layers.core import K
 from keras.initializers import Constant
@@ -49,19 +49,6 @@ nallsteps = args.steps
 K.set_learning_phase(1) #set learning phase
 K._LEARNING_PHASE = tf.constant(1) # try with 1
 
-
-def slice_hidden_right(x):
-    '''Take the first half of the hidden layer, which will control the right side of the body
-    '''
-    return x[:, :14]
-
-
-def slice_hidden_left(x):
-    '''Take the second half of the hidden layer, which will control the left side of the body
-    '''
-    return x[:, 14:]
-
-
 ## ACTOR
 left_obs_input = Input(shape=(10,), name='left_obs_input')
 right_obs_input = Input(shape=(10,), name='right_obs_input')
@@ -75,23 +62,19 @@ x = Dense(29)(x)
 x = Activation('relu')(x)
 x = Dense(29)(x)
 x = Activation('relu')(x)
-x = Dense(28)(x)
-x = Activation('relu')(x)
-r = Lambda(slice_hidden_right, output_shape=(14,), name='right_actuator')(x)
-l = Lambda(slice_hidden_left, output_shape=(14,), name='left_actuator')(x)
-actuator_encoder = Dense(9, bias_initializer=Constant(value=-2))
-encoded_right_actuator = actuator_encoder(r)
-encoded_left_actuator = actuator_encoder(l)
-x = concatenate([encoded_right_actuator, encoded_left_actuator])
+x = Dense(nb_actions, bias_initializer=Constant(value=-2))(x)
 x = Activation('sigmoid')(x)
 actor = Model(inputs=[right_obs_input, left_obs_input, the_rest_input], outputs=x)
 print(actor.summary())
 
 ## CRITIC
 
+#critic_right_obs_input = Input(shape=(10,), name='critic_right_obs_input')
+#critic_left_obs_input = Input(shape=(10,), name='critic_left_obs_input')
 critic_shared_dense_obs = Dense(5)
 critic_obs_encoded_left = critic_shared_dense_obs(left_obs_input)
 critic_obs_encoded_right = critic_shared_dense_obs(right_obs_input)
+#critic_the_rest_input = Input(shape=(19,), name='critic_the_rest_input')
 
 critic_left_action_input = Input(shape=(9,), name='critic_left_action_input')
 critic_right_action_input = Input(shape=(9,), name='critic_right_action_input')
@@ -116,13 +99,13 @@ print(critic.summary())
 
 # Set up the agent for training
 memory = SequentialMemory(limit=100000, window_length=1)
-random_process = OrnsteinUhlenbeckProcess(theta=.40, mu=0., sigma=.1, size=env.noutput)
+random_process = OrnsteinUhlenbeckProcess(theta=.25, mu=0., sigma=.1, size=env.noutput)
 agent = DDPGSymmetricAgent(nb_actions=nb_actions, actor=actor, critic=critic,
                            actor_inputs=[right_obs_input, left_obs_input, the_rest_input],
                            critic_inputs=[critic_right_action_input, critic_left_action_input,
                                           right_obs_input, left_obs_input, the_rest_input],
                            memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
-                           random_process=random_process, gamma=.99, target_model_update=1e-3, train_interval=5, delta_clip=1.,
+                           random_process=random_process, gamma=.99, target_model_update=1e-3, train_interval=10, delta_clip=1.,
                            processor=SymmetricProcessor()
                            )
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
@@ -131,12 +114,8 @@ agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
 if args.train:
-    try:
-        agent.load_weights(args.model)
-    except IOError:
-        print('Looks like the first run for this model name, failed to load weights.')
-    agent.fit(env, nb_steps=nallsteps, visualize=False, verbose=1, nb_max_episode_steps=env.timestep_limit,
-              log_interval=1000, action_repetition=1)
+    agent.load_weights(args.model)
+    agent.fit(env, nb_steps=nallsteps, visualize=False, verbose=1, nb_max_episode_steps=env.timestep_limit, log_interval=10000)
     # After training is done, we save the final weights.
     agent.save_weights(args.model, overwrite=True)
 

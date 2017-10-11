@@ -1,5 +1,8 @@
 # sillywalks
 
+### Setup
+* To activate the environment: source activate opensim-rl
+
 ### Reading List
 
 * [Sutton and Barto: Reinforcement Learning](https://www.amazon.com/Reinforcement-Learning-Introduction-Adaptive-Computation/dp/0262193981/ref=sr_1_1?ie=UTF8&qid=1506112083&sr=8-1&keywords=reinforcement+learning)

@@ -15,7 +15,7 @@ import numpy as np
 from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
-from ddpg_symmetric import DDPGSymmetricAgent, SymmetricProcessor
+from ddpg_symmetric_dual_actor_output import DDPGSymmetricAgentDualActorOutput, SymmetricProcessor
 
 from osim.env import *
 from osim.http.client import Client
@@ -82,9 +82,9 @@ l = Lambda(slice_hidden_left, output_shape=(14,), name='left_actuator')(x)
 actuator_encoder = Dense(9, bias_initializer=Constant(value=-2))
 encoded_right_actuator = actuator_encoder(r)
 encoded_left_actuator = actuator_encoder(l)
-x = concatenate([encoded_right_actuator, encoded_left_actuator])
-x = Activation('sigmoid')(x)
-actor = Model(inputs=[right_obs_input, left_obs_input, the_rest_input], outputs=x)
+activated_right_actuator = Activation('sigmoid')(encoded_right_actuator)
+activated_left_actuator = Activation('sigmoid')(encoded_left_actuator)
+actor = Model(inputs=[right_obs_input, left_obs_input, the_rest_input], outputs=[activated_right_actuator, activated_left_actuator])
 print(actor.summary())
 
 ## CRITIC
@@ -104,9 +104,9 @@ x = concatenate([critic_action_encoded_right, critic_action_encoded_left,
                  the_rest_input])
 x = Dense(40)(x)
 x = Activation('relu')(x)
-x = Dense(40)(x)
-#x = Activation('relu')(x)
-#x = Dense(32)(x)
+x = Dense(35)(x)
+x = Activation('relu')(x)
+x = Dense(18)(x)
 x = Activation('relu')(x)
 x = Dense(1)(x)
 x = Activation('linear')(x)
@@ -117,14 +117,14 @@ print(critic.summary())
 # Set up the agent for training
 memory = SequentialMemory(limit=100000, window_length=1)
 random_process = OrnsteinUhlenbeckProcess(theta=.40, mu=0., sigma=.1, size=env.noutput)
-agent = DDPGSymmetricAgent(nb_actions=nb_actions, actor=actor, critic=critic,
-                           actor_inputs=[right_obs_input, left_obs_input, the_rest_input],
-                           critic_inputs=[critic_right_action_input, critic_left_action_input,
+agent = DDPGSymmetricAgentDualActorOutput(nb_actions=nb_actions, actor=actor, critic=critic,
+                                          actor_inputs=[right_obs_input, left_obs_input, the_rest_input],
+                                          critic_inputs=[critic_right_action_input, critic_left_action_input,
                                           right_obs_input, left_obs_input, the_rest_input],
-                           memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
-                           random_process=random_process, gamma=.99, target_model_update=1e-3, train_interval=5, delta_clip=1.,
-                           processor=SymmetricProcessor()
-                           )
+                                          memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
+                                          random_process=random_process, gamma=.99, target_model_update=1e-3, train_interval=5, delta_clip=1.,
+                                          processor=SymmetricProcessor()
+                                          )
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 
 # Okay, now it's time to learn something! We visualize the training here for show, but this
