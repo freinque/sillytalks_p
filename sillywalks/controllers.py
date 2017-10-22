@@ -103,14 +103,6 @@ def residual_controller(residual_red_state):
 
 #############################################################################################################
 
-def reduce_state_output_shape(input_shape):
-    shape = list(input_shape)
-    assert len(shape) == 2  # only valid for 2D tensors
-    shape[-1] = DIM_RED_ACTION
-    return tuple(shape)
-
-
-
 def reduce_state( state ):
     '''
     '''
@@ -257,24 +249,4 @@ def controller( state ):
         #a[7]=1. #unbends ankle
         #a[8]=1. #bends ankle
     return action, red_state, red_action
-
-##################################################################################################
-
-
-def custom_reward(state):
-    '''
-    '''
-    red_state = reduce_state(state)
-    
-    term1 = red_state[-1]
-    term2 = C_Y_CM_TARGET*min(red_state[-2]-Y_CM_TARGET, 0.)
-    term3 = -C_TORSO_ANGLE_TARGET*abs(red_state[0]-TORSO_ANGLE_TARGET)
-    
-    #print 'y_cm', red_state[-2]
-    #print 'term1', term1
-    #print 'term2', term2
-    #print 'term3', term3
-
-    return term1 + term2 + term3 # dx_cm**2 minus penalty on low y_cm
-
 
