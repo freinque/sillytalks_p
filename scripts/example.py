@@ -29,7 +29,7 @@ parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
 parser.add_argument('--steps', dest='steps', action='store', default=10000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
-parser.add_argument('--model', dest='model', action='store', default="example.h5f")
+parser.add_argument('--model', dest='model', action='store', default="/models/example.h5f")
 parser.add_argument('--loadweights', dest='loadweights', action='store_true', default=False)
 parser.add_argument('--token', dest='token', action='store', required=False)
 args = parser.parse_args()
@@ -47,40 +47,65 @@ print 'nb_actions', nb_actions
 
 
 
-# actor: state to action, i.e. policy
-actor = Sequential()
-reduce_state_layer = Dense(sillywalks.controllers.DIM_RED_STATE, trainable=False, kernel_initializer='zeros', input_shape=(1,)+env.observation_space.shape)
-actor.add( reduce_state_layer )
-actor.add(Flatten())
+##########################################################################################################
+#actor: state to action
+    ## input is state
+state_input = Input(shape=(1,) + (sillywalks.controllers.DIM_STATE,), name='state_input')
+flattened_state_input = Flatten()(state_input)
 
-prop_control_layer = Dense(sillywalks.controllers.DIM_RED_ACTION, trainable=True, kernel_initializer='zeros')
-actor.add(prop_control_layer)
+    ## go through reduction
+red_state_layer = Dense(sillywalks.controllers.DIM_RED_STATE, trainable=False, kernel_initializer='zeros')
+red_state = red_state_layer(flattened_state_input)
+    
+    ## go through split
+        ## trivial
+trivial_red_state_layer = Dense(sillywalks.controllers.DIM_TRIVIAL_CONTROL, trainable=False, kernel_initializer='zeros')
+trivial_red_state = trivial_red_state_layer(red_state)
+        ## residual
+residual_red_state_layer = Dense(sillywalks.controllers.DIM_RED_STATE-sillywalks.controllers.DIM_TRIVIAL_CONTROL, trainable=False, kernel_initializer='zeros')
+residual_red_state = residual_red_state_layer(red_state)
+    
+    ## part acting on trivial red_state
+trivial_control_layer = Dense(sillywalks.controllers.DIM_TRIVIAL_CONTROL, trainable=False, kernel_initializer='zeros')
+trivial_red_action = trivial_control_layer(trivial_red_state)
+    
+    ## part acting on residual state
+residual_red_state_1 = Dense(32)(residual_red_state)
+residual_red_state_2 = Activation('relu')(residual_red_state_1)
+residual_red_state_3 = Dense(32)(residual_red_state_2)
+residual_red_state_4 = Activation('relu')(residual_red_state_3)
+residual_last_layer = Dense(sillywalks.controllers.DIM_RED_ACTION-sillywalks.controllers.DIM_TRIVIAL_CONTROL, trainable=True, kernel_initializer='zeros')
+residual_red_action = residual_last_layer(residual_red_state_4)
 
-actor.add(Dense(16))
-actor.add(Activation('relu'))
-actor.add(Dense(sillywalks.controllers.DIM_RED_ACTION))
-actor.add(Activation('relu'))
+red_action = concatenate([trivial_red_action, residual_red_action])
+inverse_reduce_action_layer = Dense(sillywalks.controllers.DIM_ACTION, trainable=False, kernel_initializer='zeros')
+action_output = inverse_reduce_action_layer(red_action)
 
-inverse_reduce_action_layer = Dense(sillywalks.controllers.DIM_ACTION, trainable=False, kernel_initializer='zeros', input_shape=(1,)+(sillywalks.controllers.DIM_RED_ACTION,) )
-actor.add( inverse_reduce_action_layer )
-
-#actor.add(Activation('sigmoid'))
+actor = Model(inputs=[state_input,], outputs=action_output)
 print 'actor summary'
 print(actor.summary())
 
     ## set actor weights
-weights = reduce_state_layer.set_weights([sillywalks.controllers.REDUCE_STATE_W, sillywalks.controllers.REDUCE_STATE_B])
-print 'reduce_state_layer ', reduce_state_layer.get_weights()
-weights = inverse_reduce_action_layer.set_weights([sillywalks.controllers.INVERSE_REDUCE_ACTION_W, sillywalks.controllers.INVERSE_REDUCE_ACTION_B])
-print 'get inverse_reduce_action_layer ', inverse_reduce_action_layer.get_weights()
+red_state_layer.set_weights([sillywalks.controllers.REDUCE_STATE_W, sillywalks.controllers.REDUCE_STATE_B])
+print 'red_state_layer initial weights ', red_state_layer.get_weights()
 
-weights = prop_control_layer.set_weights([sillywalks.controllers.PROP_CONTROL_W, sillywalks.controllers.PROP_CONTROL_B])
-print 'get prop_control_layer ', prop_control_layer.get_weights()
+trivial_red_state_layer.set_weights([sillywalks.controllers.TRIVIAL_RED_STATE_W, sillywalks.controllers.TRIVIAL_RED_STATE_B])
+print 'trivial_red_state_layer initial weights ', trivial_red_state_layer.get_weights()
+residual_red_state_layer.set_weights([sillywalks.controllers.RESIDUAL_RED_STATE_W, sillywalks.controllers.RESIDUAL_RED_STATE_B])
+print 'residual_red_state_layer initial weights ', residual_red_state_layer.get_weights()
+
+trivial_control_layer.set_weights([sillywalks.controllers.TRIVIAL_CONTROL_W, sillywalks.controllers.TRIVIAL_CONTROL_B])
+print 'trivial_control_layer initial weights ', trivial_control_layer.get_weights()
+#residual_control_layer.set_weights([sillywalks.controllers.RESIDUAL_CONTROL_W, sillywalks.controllers.RESIDUAL_CONTROL_B])
+#print 'residual_control_layer initial weights ', residual_control_layer.get_weights()
+
+inverse_reduce_action_layer.set_weights([sillywalks.controllers.INVERSE_REDUCE_ACTION_W, sillywalks.controllers.INVERSE_REDUCE_ACTION_B])
+print 'inverse_reduce_action_layer initial weights ', inverse_reduce_action_layer.get_weights()
 
 
 
-# critic: Q function
-critic = Sequential()
+##########################################################################################################
+# critic: Q function, (state, action) to real
 
 action_input = Input(shape=(sillywalks.controllers.DIM_ACTION,), name='action_input')
 observation_input = Input(shape=(1,) + (sillywalks.controllers.DIM_STATE,), name='observation_input')
@@ -105,7 +130,6 @@ print(critic.summary())
 
 weights = red_state_layer.set_weights([sillywalks.controllers.REDUCE_STATE_W, sillywalks.controllers.REDUCE_STATE_B])
 print 'reduce_state_layer ', red_state_layer.get_weights()
-
 weights = red_action_layer.set_weights([sillywalks.controllers.REDUCE_ACTION_W, sillywalks.controllers.REDUCE_ACTION_B])
 print 'get reduce_action_layer ', red_action_layer.get_weights()
 
@@ -113,7 +137,7 @@ print 'get reduce_action_layer ', red_action_layer.get_weights()
 
 # Set up the agent for training
 memory = SequentialMemory(limit=100000, window_length=1)
-random_process = OrnsteinUhlenbeckProcess(theta=.1, mu=0., sigma=.2, size=env.noutput)
+random_process = OrnsteinUhlenbeckProcess(theta=.15, mu=0., sigma=.2, size=env.noutput)
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
                   random_process=random_process, gamma=.99, target_model_update=1e-3,
@@ -124,23 +148,17 @@ agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_acti
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 
 
+############################################################################################################
 if args.loadweights:
+    print '#############################################################################################'
+    print 'loading weights from ', args.model
+    print '#############################################################################################'
     agent.load_weights(args.model)
 
-
 if args.train:
-    agent.fit(env, nb_steps=nallsteps, visualize=False, verbose=1, nb_max_episode_steps=env.timestep_limit, log_interval=10000)
+    agent.fit(env, nb_steps=nallsteps, visualize=False, verbose=1, nb_max_episode_steps=env.timestep_limit, log_interval=5000)
     # After training is done, we save the final weights.
     agent.save_weights(args.model, overwrite=True)
-
-
-
-
-
-
-
-
-
 
 # If TEST and TOKEN, submit to crowdAI
 if not args.train and args.token:
