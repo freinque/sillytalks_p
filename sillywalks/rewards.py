@@ -1,6 +1,7 @@
 import numpy as np
 
-import sillywalks.controllers
+import sillywalks.transforms
+import sillywalks.params
 
 
 ##################################################################################################
@@ -9,11 +10,11 @@ import sillywalks.controllers
 def custom_reward(state):
     '''
     '''
-    red_state = reduce_state(state)                                         # reward defined at red_state level
+    red_state = sillywalks.transforms.reduce_state(state)                   # reward defined at red_state level
     
     term1 = red_state[-1]                                                   # dx_cm term
-    term2 = C_Y_CM_TARGET*np.min(red_state[-2]-Y_CM_TARGET, 0.)             # low y_cm penalty term
-    term3 = -C_TORSO_ANGLE_TARGET*np.abs(red_state[0]-TORSO_ANGLE_TARGET)   # torso_angle penalty term
+    term2 = sillywalks.params.C_Y_CM_TARGET*min(red_state[-2]-sillywalks.params.Y_CM_TARGET, 0.)             # low y_cm penalty term
+    term3 = -sillywalks.params.C_TORSO_ANGLE_TARGET*abs(red_state[0]-sillywalks.params.TORSO_ANGLE_TARGET)   # torso_angle penalty term
     
     #print 'y_cm', red_state[-2]
     #print 'term1', term1

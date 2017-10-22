@@ -1,1 +1,1 @@
-python example.py --test --steps 50000 --model "example_red_2.h5f" --visualize
+python keras_rl.py --test --steps 1000 --model "models/${1}.h5f" --loadweights --visualize

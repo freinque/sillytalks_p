@@ -1,6 +1,6 @@
 import osim.env.run
 
-import sillywalks.controllers
+import sillywalks.rewards
 
 class RunEnv(osim.env.run.RunEnv):
     ''' overwriting reward function from environment class
@@ -8,6 +8,6 @@ class RunEnv(osim.env.run.RunEnv):
     
     def compute_reward(self):
         
-        return sillywalks.controllers.custom_reward(self.current_state)
+        return sillywalks.rewards.custom_reward(self.current_state)
 
 

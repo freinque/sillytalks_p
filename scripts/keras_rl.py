@@ -4,12 +4,13 @@ from osim.http.client import Client
 import numpy as np
 import argparse
 
+import sillywalks.agents
 import sillywalks.controllers
 import sillywalks.env
 
 
 ############################################################################################
-## setting params
+## setting run params
 
 DIFFICULTY = 0
 
