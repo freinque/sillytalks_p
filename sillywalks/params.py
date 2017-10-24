@@ -11,9 +11,9 @@ K_1 = 3.                                #constante de rappel, ankle
 K_2 = K_1                               #constante de rappel, other ankle
 K = np.array([K_0, K_1, K_2])
 
-C_Y_CM_TARGET = 15.                     # targets for proportional control
-Y_CM_TARGET = .95
-C_TORSO_ANGLE_TARGET = 7.
+C_Y_CM_TARGET = 25.                     # targets for proportional control
+Y_CM_TARGET = .92
+C_TORSO_ANGLE_TARGET = 5.
 TORSO_ANGLE_TARGET = 0.05
 ANKLE_ANGLE_TARGET = 0.00
 
