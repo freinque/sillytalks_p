@@ -102,7 +102,7 @@ print 'get reduce_action_layer ', red_action_layer.get_weights()
 # Set up the agent for training
 
 memory = SequentialMemory(limit=100000, window_length=1)
-random_process = OrnsteinUhlenbeckProcess(theta=.015, mu=0., sigma=.15, size=sillywalks.params.DIM_ACTION)
+random_process = OrnsteinUhlenbeckProcess(theta=0.15, mu=0., sigma=0.15, size=sillywalks.params.DIM_ACTION)
 ddpg_agent = DDPGAgent(nb_actions=sillywalks.params.DIM_ACTION, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
                   random_process=random_process, gamma=.99, target_model_update=1e-3,

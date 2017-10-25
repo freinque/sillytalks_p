@@ -1,4 +1,6 @@
 import numpy as np
+import sillywalks.params
+
 
 def reduce_state( state ):
     '''
@@ -13,7 +15,8 @@ def reduce_state( state ):
 #strength of left and right psoas: 1 for  difficulty < 2  , otherwise a random normal variable with mean 1 and standard, 36,37 1,1
 #deviation 0.1 fixed for the entire simulation
 #next obstacle: x distance from the pelvis, y position of the center relative to the the ground, radius. 38,39,40  [ 100, 0, 0]
-
+    #print 'reduce state got :', state[6:12]
+    
     pelvis_angle = state[0]
     x_pelvis = state[1]
     y_pelvis = state[2]
@@ -26,19 +29,23 @@ def reduce_state( state ):
     dx_cm = state[20]
     dy_cm = state[21]
     
-    l_ankle_angle = state[6]
-    r_ankle_angle = state[7]
+    #l_ankle_angle = state[6]
+    #r_ankle_angle = state[7]
+    l_ankle_angle = -state[11]
+    r_ankle_angle = -state[8]
     
     #x_l_tal = state[32]
     #x_r_tal = state[34]
     #y_l_tal = state[33]
     #y_r_tal = state[35]
 
-    l_knee_angle = state[8]
-    r_knee_angle = state[9]
+    #l_knee_angle = state[8]
+    #r_knee_angle = state[9]
+    l_knee_angle = state[10]
+    r_knee_angle = state[7]
     
-    l_upper_angle = state[10]
-    r_upper_angle = state[11]
+    l_upper_angle = state[9]
+    r_upper_angle = state[6]
   
     red_state = [           
                             ## trivial control
@@ -72,7 +79,7 @@ def inverse_reduce_action( red_action ):
     #soleus,
     #tibialis anterior.
     ## 18 conps: 9 muscles of the right leg first, then 9 muscles of the left leg
-    action = np.zeros(DIM_ACTION)
+    action = np.zeros(sillywalks.params.DIM_ACTION)
 
     action[2] = -red_action[0] # mapping upper body angle action to original action space 
     action[4] = red_action[0] # mapping body angle angle action to original action space, positive corresp to bending back

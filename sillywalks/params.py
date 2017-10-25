@@ -6,28 +6,34 @@ DIM_ACTION = 18
 DIM_RED_ACTION = 7
 DIM_TRIVIAL_CONTROL = 3                 #trivial proportional control on x first reduced dimensions   
 
-K_0 = 3.                                #constante de rappel, torso
+K_0 = 7.                                #constante de rappel, torso
 K_1 = 3.                                #constante de rappel, ankle
 K_2 = K_1                               #constante de rappel, other ankle
 K = np.array([K_0, K_1, K_2])
 
 C_Y_CM_TARGET = 25.                     # targets for proportional control
-Y_CM_TARGET = .92
-C_TORSO_ANGLE_TARGET = 5.
-TORSO_ANGLE_TARGET = 0.05
-ANKLE_ANGLE_TARGET = 0.00
+Y_CM_TARGET = .94
+C_TORSO_ANGLE_TARGET = 3.
+TORSO_ANGLE_TARGET = 0.08
+ANKLE_ANGLE_TARGET = -0.05
 
 
 ## reduce_state in np.array form
 REDUCE_STATE_W = np.zeros(shape=(DIM_STATE, DIM_RED_STATE))
 REDUCE_STATE_W[22][0] = 1.
 REDUCE_STATE_W[24][0] = -1.
-REDUCE_STATE_W[6][1] = 1.
-REDUCE_STATE_W[7][2] = 1.
-REDUCE_STATE_W[8][3] = 1.
-REDUCE_STATE_W[9][4] = 1.
-REDUCE_STATE_W[10][5] = 1.
-REDUCE_STATE_W[11][6] = 1.
+#REDUCE_STATE_W[6][1] = 1.
+#REDUCE_STATE_W[7][2] = 1.
+#REDUCE_STATE_W[8][3] = 1.
+#REDUCE_STATE_W[9][4] = 1.
+#REDUCE_STATE_W[10][5] = 1.
+#REDUCE_STATE_W[11][6] = 1.
+REDUCE_STATE_W[8][1] = -1.
+REDUCE_STATE_W[11][2] = -1.
+REDUCE_STATE_W[10][3] = 1.
+REDUCE_STATE_W[7][4] = 1.
+REDUCE_STATE_W[9][5] = 1.
+REDUCE_STATE_W[6][6] = 1.
 REDUCE_STATE_W[19][7] = 1.
 REDUCE_STATE_W[20][8] = 1.
 REDUCE_STATE_B = np.zeros(shape=(DIM_RED_STATE))
