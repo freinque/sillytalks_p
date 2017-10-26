@@ -64,20 +64,38 @@ def controller( state ):
     #return env.action_space.sample()
 
         ## inverse reduction of action   
-    action = sillywalks.transforms.inverse_reduce_action( red_action )
-    #action = np.zeros(18)
-        #a[0]=1. #pull leg back
-    #action[1]=1. #bends knee #
-    #a[2]=1. #pulls trunk back #
+    #action = sillywalks.transforms.inverse_reduce_action( red_action )
+    action = np.zeros(18)
+    #action[2]=1. #pulls trunk back #
+    action[4]=1. #trunk forward
+    #action[2+9]=1. #pulls trunk back #
+    action[4+9]=1. #trunk forward
+    
+    #action[0]=1. #pulls leg back #
+    #action[2]=1. #pulls leg back #
     #action[3]=1. #lifts leg
-    #a[4]=1. #pulls trunk forward #
-    #a[5]=1. #unbends knee #
+    #action[0+9]=1. # leg back
+    #action[2+9]=1. # leg back
+    #action[3+9]=1. #lifts leg
+    
+    
+    #action[0]=1. # bends knee
+    #action[1]=1. #bends knee #
+    #action[4]=1. #unbends knee
+    #action[5]=1. # unbends knee
+    #action[0+9]=1. # bends knee
+    #action[1+9]=1. # bends knee
+    #action[4+9]=1. # bends knee
+    #action[5+9]=1. # bends knee
+    
     #action[6]=10. #unbends r ankle
     #action[7]=10. #unbends ankle
     #action[8]=-10. #bends ankle
-    #action[6+9]=10. #unbends l ankle
-    #action[7+9]=10. #unbends ankle
+    #action[6+9]=1. #unbends l ankle
+    #action[7+9]=1. #unbends ankle
+    #action[8+9]=-1. #bends ankle
     #action[8+9]=-10. #bends ankle
+    #action[11]=1. # pulls trunk back
     #action = -action
     return action, red_state, red_action
 

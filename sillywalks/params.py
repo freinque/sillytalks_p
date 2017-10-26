@@ -1,5 +1,9 @@
 import numpy as np
 
+THETA = 0.65 #0.15
+SIGMA = 0.65 #0.15
+WARMUP = 75 #100
+
 DIM_STATE = 41
 DIM_RED_STATE = 9
 DIM_ACTION = 18
@@ -7,12 +11,12 @@ DIM_RED_ACTION = 7
 DIM_TRIVIAL_CONTROL = 3                 #trivial proportional control on x first reduced dimensions   
 
 K_0 = 7.                                #constante de rappel, torso
-K_1 = 3.                                #constante de rappel, ankle
+K_1 = 5. #3                               #constante de rappel, ankle
 K_2 = K_1                               #constante de rappel, other ankle
 K = np.array([K_0, K_1, K_2])
 
-C_Y_CM_TARGET = 25.                     # targets for proportional control
-Y_CM_TARGET = .94
+C_Y_CM_TARGET = 35.                     # targets for proportional control
+Y_CM_TARGET = .93
 C_TORSO_ANGLE_TARGET = 3.
 TORSO_ANGLE_TARGET = 0.08
 ANKLE_ANGLE_TARGET = -0.05
@@ -68,21 +72,32 @@ RESIDUAL_CONTROL_B = np.zeros(shape=(DIM_RED_ACTION-DIM_TRIVIAL_CONTROL))
 
 ## inverse_reduce_action in np.array form
 INVERSE_REDUCE_ACTION_W = np.zeros(shape=(DIM_RED_ACTION, DIM_ACTION))
-INVERSE_REDUCE_ACTION_W[0][2] = -1.
-INVERSE_REDUCE_ACTION_W[0][4] = 1.
-INVERSE_REDUCE_ACTION_W[1][6] = 1.
+INVERSE_REDUCE_ACTION_W[0][2] = -1. #trunk
+INVERSE_REDUCE_ACTION_W[0][4] = 1. 
+INVERSE_REDUCE_ACTION_W[0][2+9] = -1.
+INVERSE_REDUCE_ACTION_W[0][4+9] = 1. 
+
+INVERSE_REDUCE_ACTION_W[1][6] = 1. #ankles
 INVERSE_REDUCE_ACTION_W[1][7] = 1.
 INVERSE_REDUCE_ACTION_W[1][8] = -1.
 INVERSE_REDUCE_ACTION_W[2][6+9] = 1.
 INVERSE_REDUCE_ACTION_W[2][7+9] = 1.
 INVERSE_REDUCE_ACTION_W[2][8+9] = -1.
-INVERSE_REDUCE_ACTION_W[3][1] = -1.
+
+INVERSE_REDUCE_ACTION_W[3][0] = -1. # knees
+INVERSE_REDUCE_ACTION_W[3][1] = -1. # knees
+INVERSE_REDUCE_ACTION_W[3][4] = 1.
 INVERSE_REDUCE_ACTION_W[3][5] = 1.
+INVERSE_REDUCE_ACTION_W[4][0+9] = -1.
 INVERSE_REDUCE_ACTION_W[4][1+9] = -1.
+INVERSE_REDUCE_ACTION_W[4][4+9] = 1.
 INVERSE_REDUCE_ACTION_W[4][5+9] = 1.
-INVERSE_REDUCE_ACTION_W[5][0] = 1.
+
+INVERSE_REDUCE_ACTION_W[5][0] = 1. #upper legs
+INVERSE_REDUCE_ACTION_W[5][2] = 1. #upper legs
 INVERSE_REDUCE_ACTION_W[5][3] = -1.
 INVERSE_REDUCE_ACTION_W[6][0+9] = 1.
+INVERSE_REDUCE_ACTION_W[6][2+9] = 1.
 INVERSE_REDUCE_ACTION_W[6][3+9] = -1.
 INVERSE_REDUCE_ACTION_B = np.zeros(shape=(DIM_ACTION))
 
