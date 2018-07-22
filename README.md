@@ -1,7 +1,6 @@
 # sillytalks
 
-[TensorFlow Sample](https://www.tensorflow.org/versions/master/tutorials/audio_recognition)
-**tentative solution**
+**[TensorFlow Sample](https://www.tensorflow.org/versions/master/tutorials/audio_recognition) tentative solution**
 
 ### example usage
 
