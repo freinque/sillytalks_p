@@ -1,6 +1,6 @@
 # sillytalks
 
-**[TensorFlow Sample](https://www.tensorflow.org/versions/master/tutorials/audio_recognition) tentative solution**
+**[TensorFlow Speech Recognition Challenge](https://www.kaggle.com/c/tensorflow-speech-recognition-challenge) tentative solution**
 
 ### example usage
 
