@@ -32,7 +32,7 @@ instantiates saved model and go through one training cycle
 
 **Very high level view of approach taken:**
 
-* basic filterng, triming, fourier transform and downsampling of wav samples
+* basic filtering, trimming, fourier transform and downsampling of wav samples
 
 * symmetrizing with respects to time shifts, etc.
 
